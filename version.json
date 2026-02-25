@@ -1,0 +1,13 @@
+{
+  "version": "6.0.0",
+  "buildDate": "2025-11-06",
+  "description": "Full CRUD with auto-load for editing",
+  "features": [
+    "Create: Add sections, subsections, topics with content",
+    "Read: Display topic content properly (object format support)",
+    "Update: Type existing topic title - content auto-loads for editing",
+    "Delete: Fill in fields, click delete, confirm dialog",
+    "Auto-load: When you enter an existing topic title, content loads automatically",
+    "Smart detection: Finds and loads existing content for editing"
+  ]
+}

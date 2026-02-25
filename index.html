@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1e2a78" />
+  <meta name="description" content="تطبيق شامل للمحتوى الإسلامي الشيعي والسني" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>سبل السلام</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="assets/logo.png" />
+  <link rel="apple-touch-icon" href="assets/logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa&display=swap" rel="stylesheet">
+  <!-- Quill.js Rich Text Editor -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body style="background-image: url('https://i.pinimg.com/736x/b3/9c/6f/b39c6ff39048059c457bf6141ae8bf0f.jpg'); background-size: cover; background-repeat: no-repeat; background-position: center 5%;">
+
+  <!-- شاشة سبلش -->
+  <div id="splash" style="display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 10rem;">
+  <img id="logo" src="assets/logo.png" alt="Logo" style="width: 180px; height: 180px; margin-top: 90px; margin-bottom: 80px;" />
+  <h1 id="appName" data-i18n="appName">سبل السلام</h1>
+  <p id="appSlogan" data-i18n="appSlogan">لرد الشبهات حول الإسلام</p>
+  </div>
+
+  <!-- أزرار القائمة والبحث -->
+  <button id="sidebarToggle" aria-label="فتح القائمة" title="فتح القائمة" class="hidden" data-i18n-aria-label="sidebarToggleTitle" data-i18n-title="sidebarToggleTitle">&#9776;</button>
+  <button id="searchToggle" aria-label="بحث" title="بحث" class="hidden" data-i18n-aria-label="searchToggleTitle" data-i18n-title="searchToggleTitle">&#128269;</button>
+  <input type="text" id="searchInput" placeholder="ابحث..." class="hidden" autocomplete="off" data-i18n-placeholder="searchPlaceholder" />
+  <div id="searchResults" class="hidden" tabindex="0"></div>
+
+  <!-- الشريط الجانبي -->
+  <aside id="sidebar" aria-hidden="true">
+  <h2 data-i18n="settingsTitle">الإعدادات</h2>
+  <!-- Small hidden editor access button at bottom right of sidebar -->
+  <button id="sidebarEditorBtn"
+    style="display:none; position:absolute; bottom:24px; right:24px; width:32px; height:32px; border-radius:50%; background:#607d8b; color:#fff; border:none; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:9999; cursor:pointer; font-size:18px;"
+    title="فتح المحرر"
+    aria-label="فتح المحرر"
+  >&#9881;</button>
+    <div class="setting-item">
+      <label for="languageSelect" data-i18n="languageLabel">اللغة:</label>
+      <select id="languageSelect">
+        <option value="ar" selected>العربية</option>
+        <option value="en">English</option>
+        <option value="fa">فارسی</option>
+      </select>
+    </div>
+    <div class="setting-item" style="display:none;">
+      <label data-i18n="themeLabel">الوضع:</label>
+      <button id="toggleThemeBtn" data-i18n="toggleThemeBtn">تبديل الوضع</button>
+    </div>
+    <div class="setting-item">
+      <label for="backgroundSelect" data-i18n="backgroundLabel">خلفية التطبيق:</label>
+      <select id="backgroundSelect">
+        <option value="" disabled selected data-i18n="chooseBackground">اختر الخلفية</option>
+        <option data-i18n="background1" value="https://i.pinimg.com/736x/cc/ac/0d/ccac0d4257d6bfba3d45eb61c40a1be9.jpg">خلفية 1</option>
+        <option data-i18n="background2" value="https://i.pinimg.com/736x/ee/5a/46/ee5a4681026efefa92ad766deb00b3cb.jpg">خلفية 2</option>
+        <option data-i18n="background3" value="https://i.pinimg.com/736x/a8/12/f0/a812f080e71fe9c4d46460e0ec7b069a.jpg">خلفية 3</option>
+        <option data-i18n="background4" value="https://i.pinimg.com/736x/b3/9c/6f/b39c6ff39048059c457bf6141ae8bf0f.jpg">خلفية 4</option>
+        <option data-i18n="background5" value="https://i.pinimg.com/736x/bf/41/17/bf4117f6e6b2bdb9c111897e4f66df26.jpg">خلفية 5</option>
+        <option data-i18n="background6" value="https://i.pinimg.com/736x/e8/c3/5c/e8c35ca960dff9d323220cd634412527.jpg">خلفية 6</option>
+        <option data-i18n="background7" value="https://i.pinimg.com/736x/73/68/f7/7368f7eb8f3b3cc0e40e855755284d1b.jpg">خلفية 7</option>
+        <option data-i18n="background8" value="https://i.pinimg.com/736x/5a/58/a1/5a58a156d0ef6423358d700450c7d3df.jpg">خلفية 8</option>
+        <option data-i18n="background9" value="https://i.pinimg.com/736x/00/b3/e8/00b3e8510d34c7a732233ca4b5171962.jpg">خلفية 9</option>
+        <option data-i18n="background10" value="https://i.pinimg.com/736x/a7/83/94/a78394efd376ba16136d8257a418111e.jpg">خلفية 10</option>
+        <option data-i18n="background11" value="https://i.pinimg.com/736x/6a/1c/a4/6a1ca452cabf8d851837407efb1043d7.jpg">خلفية 11</option>
+        <option data-i18n="background12" value="https://i.pinimg.com/736x/9f/0f/e8/9f0fe889db634a2e55bb551cdeabc9aa.jpg">خلفية 12</option>
+        <option data-i18n="background13" value="https://i.pinimg.com/736x/98/1e/52/981e5222f12d3d1352cb1ae240107281.jpg">خلفية 13</option>
+        <option data-i18n="background14" value="https://i.pinimg.com/736x/0b/18/00/0b1800f627ba08a29a724854fa3ef349.jpg">خلفية 14</option>
+        <option data-i18n="background15" value="https://i.pinimg.com/736x/35/08/4b/35084b86342e171350338fdc27f21bcd.jpg">خلفية 15</option>
+        <option data-i18n="background16" value="https://i.pinimg.com/736x/e1/7a/d9/e17ad965121e93f19aeec513f2caa005.jpg">خلفية 16</option>
+        <option data-i18n="background17" value="https://i.pinimg.com/736x/1d/4e/7b/1d4e7b90779d315dca0ffb3e05ae97ae.jpg">خلفية 17</option>
+      </select>
+    </div>
+    <div class="setting-item" id="favoritesSection">
+      <h3 data-i18n="favoritesTitle">المفضلات</h3>
+      <div id="favoritesList" style="max-height: 200px; overflow-y: auto; border: 1px solid #90caf9; border-radius: 6px; padding: 8px; background: white; color: #1e2a78;">
+        لا توجد مفضلات حالياً.
+      </div>
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="setting-item" style="position:relative;">
+      <!-- Small toggle dot for CRUD editor -->
+      <button id="toggleAdminBtn"
+        onclick="(function(e){e.stopPropagation();e.preventDefault(); if(typeof showCrudEditor === 'function'){ try{ showCrudEditor(); }catch(err){ console.warn('showCrudEditor threw',err); var m=document.getElementById('crudEditorModal'); if(m){ m.style.display='flex'; m.style.alignItems='flex-start'; } } } else { var m=document.getElementById('crudEditorModal'); if(m){ m.style.display='flex'; m.style.alignItems='flex-start'; } } })(event)"
+        style="display:block; position:absolute; bottom:16px; right:16px; width:12px; height:12px; border-radius:50%; background:#607d8b; border:1px solid rgba(255,255,255,0.6); padding:0; cursor:pointer;"
+        title="فتح المحرر"
+        aria-label="فتح المحرر"
+      ></button>
+    </div>
+    <div class="setting-item" id="adminSection" style="display:none;">
+      <h3 data-i18n="adminTitle">الإدارة</h3>
+      <button id="adminLoginBtn" style="background:#ff9800; color:#fff;" data-i18n="adminLogin">✏️ تحرير المحتوى</button>
+      <button id="exportLangBtn" data-i18n="exportLangBtn" style="display:none;">تصدير محتوى اللغة</button>
+      <small style="display:block; margin-top:6px; color:#555;" data-i18n="exportHelp">محرر بسيط لإضافة وتعديل المحتوى مباشرة</small>
+    </div>
+    <!-- Remote update UI removed (automatic remote detection enabled) -->
+  </aside>
+
+  <!-- الحاوية الرئيسية -->
+  <div id="container" style="display:none;">
+    <!-- Logo on main screen -->
+    <div style="text-align: center; margin-top: 150px;">
+      <img id="logo" class="spin" src="assets/logo.png" alt="Logo" style="width: 180px; height: 180px; margin-top: 50px; filter: drop-shadow(0 0 8px rgba(64, 224, 208, 0.5));" />
+    </div>
+    <br>
+    <!-- العبارة الرئيسية -->
+  <h2 class="main-title" data-i18n="mainBannerTitle">لعن الله ظالميك يا فاطمة</h2>
+
+    <!-- عرض الأقسام -->
+    <div id="sections" class="sections" style="margin-top: 40px;">
+      <div class="section-list" id="sectionList"></div>
+    </div>
+
+    <!-- عرض الأقسام الفرعية -->
+    <div id="subSections" class="sections" style="display:none;">
+      <button id="backToSectionsBtn" class="btn-back" data-i18n="backButton">عودة للأقسام</button>
+      <h2 id="subSectionTitle"></h2>
+      <div class="section-list" id="subSectionList"></div>
+    </div>
+
+    <!-- عرض المواضيع -->
+    <div id="topicsSection" style="display:none;">
+      <button id="backToSubSectionsBtn" class="btn-back" data-i18n="backButtonSub">عودة للأقسام الفرعية</button>
+      <h2 id="topicSectionTitle"></h2>
+      <div id="topicList"></div>
+    </div>
+  </div>
+
+  <!-- Add Content Modal removed (single-editor workflow; no public add content) -->
+
+  <!-- Admin Password Modal -->
+  <div id="adminPasswordModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:20000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:24px; max-width:400px; width:90%; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+      <h3 style="margin:0 0 16px 0; color:#1e2a78;" data-i18n="adminLoginTitle">🔐 التحقق من كلمة المرور</h3>
+      <p style="margin:0 0 16px 0; color:#666; font-size:14px;" data-i18n="adminPasswordVerifyText">الرجاء إدخال كلمة المرور للحفظ أو الحذف</p>
+      <input type="password" id="adminPasswordInput" placeholder="كلمة المرور" data-i18n-placeholder="adminPassword"
+             style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; margin-bottom:12px; font-size:16px;" />
+      <div style="display:flex; gap:8px;">
+        <button id="adminPasswordSubmit" style="flex:1; padding:10px; background:#4caf50; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;" data-i18n="adminLoginBtn">
+          تأكيد
+        </button>
+        <button id="adminPasswordCancel" style="flex:1; padding:10px; background:#999; color:#fff; border:none; border-radius:6px; cursor:pointer;" data-i18n="adminCancel">
+          إلغاء
+        </button>
+      </div>
+      <small style="display:block; margin-top:12px; color:#666;">كلمة المرور الافتراضية: <code>admin123</code></small>
+    </div>
+  </div>
+
+  <!-- Admin Content Editor Modal -->
+  <div id="adminEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:20000; overflow:auto; padding:20px;">
+    <div style="background:#fff; border-radius:12px; padding:24px; max-width:1200px; margin:0 auto; box-shadow:0 8px 24px rgba(0,0,0,0.3);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <h3 style="margin:0; color:#1e2a78;">✏️ محرر المحتوى - وضع الإدارة</h3>
+        <button id="adminEditorClose" style="background:#f44336; color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">
+          X
+        </button>
+      </div>
+      
+      <div style="margin-bottom:16px;">
+        <label style="display:block; margin-bottom:4px; font-weight:bold;">اختر اللغة:</label>
+        <select id="adminLangSelect" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;">
+          <option value="ar">العربية (Arabic)</option>
+          <option value="en">English</option>
+          <option value="fa">فارسی (Persian)</option>
+          <option value="ur">اردو (Urdu)</option>
+        </select>
+      </div>
+      
+      <div style="margin-bottom:16px;">
+        <label style="display:block; margin-bottom:4px; font-weight:bold;">محتوى JSON:</label>
+        <textarea id="adminContentEditor" rows="20" 
+                  style="width:100%; padding:12px; border:1px solid #ccc; border-radius:6px; 
+                         font-family: 'Courier New', monospace; font-size:14px; resize:vertical;"></textarea>
+      </div>
+      
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="adminLoadContent" style="padding:10px 16px; background:#2196f3; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+          📥 تحميل المحتوى الحالي
+        </button>
+        <button id="adminValidateJSON" style="padding:10px 16px; background:#ff9800; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+          ✓ التحقق من صحة JSON
+        </button>
+        <button id="adminSaveContent" style="padding:10px 16px; background:#4caf50; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+          💾 حفظ التغييرات
+        </button>
+        <button id="adminExportJSON" style="padding:10px 16px; background:#9c27b0; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+          📤 تصدير JSON
+        </button>
+        <button id="adminImportJSON" style="padding:10px 16px; background:#607d8b; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+          📁 استيراد ملف JSON
+        </button>
+      </div>
+      <input type="file" id="adminImportFile" accept=".json" style="display:none;" />
+      
+      <div id="adminEditorStatus" style="margin-top:16px; padding:12px; border-radius:6px; display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Simple CRUD Editor Modal -->
+  <div id="crudEditorModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:19999; overflow-y:auto; padding:20px;">
+    <div style="background:#fff; border-radius:12px; max-width:600px; margin:auto; padding:24px; position:relative;">
+      <button id="crudEditorClose" style="position:absolute; top:12px; left:12px; background:#e0e0e0; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold;" data-i18n="crudClose">
+      X
+      </button>
+      <h2 style="margin:0 0 20px 0; color:#1e2a78; text-align:center;" data-i18n="crudEditorTitle">✏️ تحرير المحتوى</h2>
+      
+      <!-- CRUD Type Selection -->
+      <div style="margin-bottom:20px;">
+        <label style="display:block; font-weight:bold; margin-bottom:8px; color:#333;" data-i18n="crudEditType">نوع التحرير:</label>
+        <select id="crudType" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;">
+          <option value="section" data-i18n="crudAddSection">إضافة/تعديل قسم رئيسي</option>
+          <option value="subsection" data-i18n="crudAddSubsection">إضافة/تعديل قسم فرعي</option>
+          <option value="topic" data-i18n="crudAddTopic">إضافة/تعديل موضوع</option>
+        </select>
+      </div>
+
+      <!-- Section Fields -->
+      <div id="crudSectionFields">
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;">حدد القسم الموجود (أو أنشئ جديدًا أدناه):</label>
+          <select id="crudSectionSelector" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px; margin-bottom:10px;">
+            <option value="">إنشاء جديد / اختر للتحرير أو الحذف</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudSectionName">اسم القسم الرئيسي:</label>
+          <input type="text" id="crudSectionName" placeholder="مثال: عقائد الشيعة الامامية" data-i18n-placeholder="crudSectionPlaceholder"
+                 style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;" />
+        </div>
+      </div>
+
+      <!-- Subsection Fields -->
+      <div id="crudSubsectionFields" style="display:none;">
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudParentSection">القسم الرئيسي:</label>
+          <select id="crudParentSection" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;">
+            <option value="" data-i18n="crudSelectSection">-- اختر القسم --</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;">حدد القسم الفرعي الموجود (أو أنشئ قسمًا فرعيًا جديدًا أدناه):</label>
+          <select id="crudSubsectionSelector" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px; margin-bottom:10px;">
+            <option value="">-- إنشاء جديد / تحديد للتحرير / الحذف --</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudSubsectionName">اسم القسم الفرعي:</label>
+          <input type="text" id="crudSubsectionName" placeholder="مثال: اصول الدين" data-i18n-placeholder="crudSubsectionPlaceholder"
+                 style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;" />
+        </div>
+      </div>
+
+      <!-- Topic Fields -->
+      <div id="crudTopicFields" style="display:none;">
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudParentSection">القسم الرئيسي:</label>
+          <select id="crudTopicSection" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;">
+            <option value="" data-i18n="crudSelectSection">-- اختر القسم --</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudSubsectionName">القسم الفرعي:</label>
+          <select id="crudTopicSubsection" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;">
+            <option value="" data-i18n="crudSelectSubsection">-- اختر القسم الفرعي --</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;">حدد الموضوع الحالي (أو قم بإنشاء موضوع جديد أدناه):</label>
+          <select id="crudTopicSelector" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px; margin-bottom:10px;">
+            <option value="">-- إنشاء جديد / تحديد للتحرير / الحذف --</option>
+          </select>
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudTopicTitle">عنوان الموضوع:</label>
+          <input type="text" id="crudTopicTitle" placeholder="مثال: هل الشيعة مسلمون؟" data-i18n-placeholder="crudTopicTitlePlaceholder"
+                 style="width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:16px;" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block; font-weight:bold; margin-bottom:6px;" data-i18n="crudTopicContent">المحتوى:</label>
+          <div id="crudTopicContent" style="background:#fff;"></div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex; gap:10px; margin-top:20px; align-items:center;">
+        <button id="crudSaveBtn" aria-label="حفظ" title="حفظ"
+                style="background:transparent; border:none; padding:6px; color:#1e2a78; cursor:pointer; font-size:28px; line-height:1; flex:none;">
+          💾
+        </button>
+        <button id="crudDeleteBtn" aria-label="حذف" title="حذف"
+                style="background:transparent; border:none; padding:6px; color:#f44336; cursor:pointer; font-size:28px; line-height:1; flex:none;">
+          🗑️
+        </button>
+      </div>
+
+      <!-- Export/Import Buttons (Hidden) -->
+      <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee;">
+        <details style="cursor:pointer;">
+          <summary style="color:#888; font-size:12px; user-select:none;">خيارات متقدمة</summary>
+          <div style="display:flex; gap:8px; margin-top:10px;">
+            <button id="crudExportBtn" style="flex:1; padding:8px; background:#607d8b; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px;" title="تصدير المحتوى إلى ملف JSON">
+              تصدير JSON
+            </button>
+            <button id="crudImportBtn" style="flex:1; padding:8px; background:#607d8b; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px;" title="استيراد المحتوى من ملف JSON">
+              استيراد JSON
+            </button>
+            <input type="file" id="crudImportFile" accept=".json" style="display:none;" />
+          </div>
+        </details>
+      </div>
+
+      <div id="crudStatus" style="margin-top:16px; padding:12px; border-radius:6px; display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Quill.js Rich Text Editor Script -->
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="script.js?v=2026020603"></script>
+
+</body>
+</html>

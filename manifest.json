@@ -1,0 +1,29 @@
+{
+  "name": "تطبيق الشيعة والسنة",
+  "short_name": "شيعة سنة",
+  "description": "تطبيق شامل للمحتوى الإسلامي الشيعي والسني",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": ".",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#1e2a78",
+  "background_color": "#ffffff",
+  "scope": ".",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "reference", "lifestyle"],
+  "prefer_related_applications": false
+}
