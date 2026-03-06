@@ -1493,6 +1493,13 @@ window.onload = () => {
 
                 if (rows.length === 0) return false;
 
+                // Add manifest row listing all valid keys — used by other devices to ignore deleted orphan rows
+                rows.push({
+                  key: '__manifest__',
+                  content: { keys: rows.map(r => r.key) },
+                  updated_at: timestamp
+                });
+
                 // Single upsert call for all rows
                 const resp = await fetch(`${SUPABASE_URL}/rest/v1/app_content?on_conflict=key`, {
                   method: 'POST',
@@ -1564,8 +1571,13 @@ window.onload = () => {
                     // Reconstruct content from multiple rows
                     const reconstructed = { sections: {} };
 
+                    // Use manifest to filter out deleted orphan rows
+                    const manifestRow = rows.find(r => r.key === '__manifest__');
+                    const validKeys = manifestRow ? new Set(manifestRow.content.keys) : null;
+                    const activeRows = validKeys ? rows.filter(r => r.key === '__manifest__' || validKeys.has(r.key)) : rows;
+
                     // First pass: collect section structures
-                    for (const row of rows) {
+                    for (const row of activeRows) {
                       if (row.key && row.key.startsWith('section_')) {
                         const sectionName = row.key.replace('section_', '');
                         reconstructed.sections[sectionName] = {
@@ -1576,7 +1588,7 @@ window.onload = () => {
                     }
 
                     // Second pass: fill in subsections
-                    for (const row of rows) {
+                    for (const row of activeRows) {
                       if (row.key && row.key.includes('__')) {
                         const [sectionName, subName] = row.key.split('__');
                         if (reconstructed.sections[sectionName]) {
