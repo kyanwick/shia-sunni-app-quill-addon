@@ -1460,47 +1460,13 @@ window.onload = () => {
              */
             async function saveToServer(content) {
               try {
-                const rows = [];
-                const timestamp = new Date().toISOString();
+                // Store entire content as a single row — no orphan rows on delete
+                const row = [{
+                  key: 'full_content',
+                  content: { sections: content.sections || {} },
+                  updated_at: new Date().toISOString()
+                }];
 
-                if (content.sections) {
-                  for (const sectionName in content.sections) {
-                    const section = content.sections[sectionName];
-                    rows.push({
-                      key: `section_${sectionName}`,
-                      content: {
-                        name: sectionName,
-                        subSections: section.subSections ? Object.keys(section.subSections) : [],
-                        topics: section.topics || []
-                      },
-                      updated_at: timestamp
-                    });
-                    if (section.subSections) {
-                      for (const subName in section.subSections) {
-                        rows.push({
-                          key: `${sectionName}__${subName}`,
-                          content: {
-                            section: sectionName,
-                            subsection: subName,
-                            topics: section.subSections[subName].topics || []
-                          },
-                          updated_at: timestamp
-                        });
-                      }
-                    }
-                  }
-                }
-
-                if (rows.length === 0) return false;
-
-                // Add manifest row listing all valid keys — used by other devices to ignore deleted orphan rows
-                rows.push({
-                  key: '__manifest__',
-                  content: { keys: rows.map(r => r.key) },
-                  updated_at: timestamp
-                });
-
-                // Single upsert call for all rows
                 const resp = await fetch(`${SUPABASE_URL}/rest/v1/app_content?on_conflict=key`, {
                   method: 'POST',
                   headers: {
@@ -1509,29 +1475,17 @@ window.onload = () => {
                     'Content-Type': 'application/json',
                     'Prefer': 'resolution=merge-duplicates,return=representation'
                   },
-                  body: JSON.stringify(rows)
+                  body: JSON.stringify(row)
                 });
 
                 if (resp.ok) {
                   const saved = await resp.json().catch(() => []);
-                  console.log(`✓ Supabase returned ${saved.length} rows:`, saved);
+                  console.log(`✓ Supabase saved full_content row:`, saved);
                   if (saved.length === 0) {
-                    console.error('✗ Supabase accepted request but saved 0 rows — likely RLS blocking UPDATE');
-                    showSyncStatus('offline', '✗ Supabase RLS blocked save (0 rows written)', 8000);
+                    console.error('✗ Supabase RLS blocked save (0 rows written)');
+                    showSyncStatus('offline', '✗ Supabase RLS blocked save', 8000);
                     return false;
                   }
-
-                  // Delete any Supabase rows that are no longer in the current content
-                  const currentKeys = rows.map(r => r.key);
-                  const keysParam = currentKeys.map(k => `"${k}"`).join(',');
-                  await fetch(`${SUPABASE_URL}/rest/v1/app_content?key=not.in.(${keysParam})`, {
-                    method: 'DELETE',
-                    headers: {
-                      'apikey': SUPABASE_KEY,
-                      'Authorization': `Bearer ${SUPABASE_KEY}`
-                    }
-                  }).catch(e => console.warn('Cleanup delete failed:', e));
-
                   return true;
                 } else {
                   const err = await resp.text();
@@ -1567,57 +1521,28 @@ window.onload = () => {
                 if (response.ok) {
                   const rows = await response.json();
 
-                  if (rows && rows.length > 0) {
-                    // Reconstruct content from multiple rows
-                    const reconstructed = { sections: {} };
+                  // Look for the single full_content row saved by saveToServer
+                  const fullRow = rows && rows.find(r => r.key === 'full_content');
 
-                    // Use manifest to filter out deleted orphan rows
-                    const manifestRow = rows.find(r => r.key === '__manifest__');
-                    const validKeys = manifestRow ? new Set(manifestRow.content.keys) : null;
-                    const activeRows = validKeys ? rows.filter(r => r.key === '__manifest__' || validKeys.has(r.key)) : rows;
-
-                    // First pass: collect section structures
-                    for (const row of activeRows) {
-                      if (row.key && row.key.startsWith('section_')) {
-                        const sectionName = row.key.replace('section_', '');
-                        reconstructed.sections[sectionName] = {
-                          subSections: {},
-                          topics: row.content.topics || []
-                        };
-                      }
-                    }
-
-                    // Second pass: fill in subsections
-                    for (const row of activeRows) {
-                      if (row.key && row.key.includes('__')) {
-                        const [sectionName, subName] = row.key.split('__');
-                        if (reconstructed.sections[sectionName]) {
-                          reconstructed.sections[sectionName].subSections[subName] = {
-                            topics: row.content.topics || []
-                          };
-                        }
-                      }
-                    }
-
-                    // Only overwrite local content if Supabase is newer than last local save
+                  if (fullRow && fullRow.content && fullRow.content.sections) {
                     const localSavedAt = parseInt(localStorage.getItem('contentSavedAt') || '0');
                     const supabaseSavedAt = parseInt(localStorage.getItem('contentSyncedAt') || '0');
                     if (supabaseSavedAt >= localSavedAt) {
+                      const reconstructed = { sections: fullRow.content.sections };
                       ContentStore.set(JSON.stringify(reconstructed));
                       if (data.ar) data.ar.sections = reconstructed.sections;
                       localStorage.setItem('contentSyncedAt', Date.now().toString());
+                      console.log('✓ Synced full_content from Supabase');
+                      showSyncStatus('online', '✓ تم تحديث المحتوى', 3000);
+                      const lang = languageSelect?.value || 'ar';
+                      translatePage(lang);
+                      if (typeof openMainSections === 'function') openMainSections();
                     } else {
-                      console.log('Local content is newer than Supabase — keeping local data');
+                      console.log('Local content is newer — keeping local data');
+                      showSyncStatus('online', '✓ متصل', 3000);
                     }
-                    console.log(`✓ Synced ${rows.length} content chunks from Supabase`);
-                    showSyncStatus('online', '✓ تم تحديث المحتوى', 3000);
-
-                    // Refresh UI
-                    const lang = languageSelect?.value || 'ar';
-                    translatePage(lang);
-                    if (typeof openMainSections === 'function') openMainSections();
                   } else {
-                    console.log('Supabase is empty, keeping local content');
+                    console.log('No full_content row in Supabase, keeping local content');
                     showSyncStatus('online', '✓ متصل — لا يوجد محتوى جديد', 3000);
                   }
                 } else {
