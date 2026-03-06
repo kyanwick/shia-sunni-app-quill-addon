@@ -1,0 +1,13 @@
+node_modules/
+
+# Android build outputs and generated files
+android/.gradle/
+android/build/
+android/app/build/
+android/.idea/
+android/local.properties
+android/captures/
+android/.navigation/
+
+# Keep android source files (app code + icons)
+!android/app/src/

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(node:*)",
+      "Bash(tail:*)",
+      "Bash(cd \"C:/localhost/shia-sunni-app quill addon\" && npx cap init \"سبل السلام\" \"com.subulalsalam.app\" --web-dir \".\" 2>&1)",
+      "Bash(cd \"C:/localhost/shia-sunni-app quill addon\" && npx cap add android 2>&1)",
+      "Bash(mkdir:*)",
+      "Bash(cd \"C:/localhost/shia-sunni-app quill addon\" && npx cap sync android 2>&1)",
+      "Bash(python3:*)"
+    ]
+  }
+}

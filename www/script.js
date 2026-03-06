@@ -1180,26 +1180,13 @@ searchInput.addEventListener("input", () => {
         results.push({ name: subSec, type: "sub", parent: mainSec, originalName: subSec });
       }
       (subSecs[subSec].topics || []).forEach(topic => {
-        const topicTitle = typeof topic === 'string' ? topic : (topic.title || '');
-        const topicContent = typeof topic === 'object' ? (topic.content || '') : '';
-        const plainContent = topicContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-        const titleMatch = topicTitle.toLowerCase().includes(query);
-        const contentMatch = plainContent.toLowerCase().includes(query);
-        if (titleMatch || contentMatch) {
-          let snippet = '';
-          if (contentMatch && !titleMatch) {
-            const idx = plainContent.toLowerCase().indexOf(query);
-            const start = Math.max(0, idx - 40);
-            const end = Math.min(plainContent.length, idx + query.length + 40);
-            snippet = (start > 0 ? '…' : '') + plainContent.slice(start, end) + (end < plainContent.length ? '…' : '');
-          }
+        if (topic.toLowerCase().includes(query)) {
           results.push({
-            name: topicTitle,
-            snippet,
+            name: topic,
             type: "topic",
             parent: subSec,
             grandParent: mainSec,
-            originalName: topicTitle
+            originalName: topic
           });
         }
       });
@@ -1211,7 +1198,7 @@ searchInput.addEventListener("input", () => {
     searchResults.innerHTML = "";
     results.forEach(item => {
       const div = document.createElement("div");
-      div.innerHTML = highlight(item.name, query) + (item.snippet ? `<div style="font-size:0.8em;opacity:0.7;margin-top:2px">${highlight(item.snippet, query)}</div>` : '');
+      div.innerHTML = highlight(item.name, query);
       div.tabIndex = 0;
       div.setAttribute("role", "option");
       div.addEventListener("click", () => {
@@ -2671,21 +2658,9 @@ window.onload = () => {
                   messages: data.ar.messages
                 };
                 ContentStore.set(JSON.stringify(contentToSave));
-                localStorage.setItem('contentSavedAt', Date.now().toString());
-
+                
                 // Update in-memory Arabic data
                 data.ar.sections = content.sections;
-
-                // Sync deletion to Supabase so it doesn't come back on next launch
-                showSyncStatus('loading', 'جاري الحفظ إلى Supabase...', 0);
-                saveToServer(contentToSave).then(success => {
-                  const now = Date.now().toString();
-                  localStorage.setItem('contentSavedAt', now);
-                  localStorage.setItem('contentSyncedAt', now);
-                  showSyncStatus('online', '✓ تم الحذف في Supabase', 3000);
-                }).catch(() => {
-                  showSyncStatus('offline', '⚠ تم الحذف محلياً فقط — فشل Supabase', 5000);
-                });
                 
                 // Refresh UI
                 translatePage(lang);

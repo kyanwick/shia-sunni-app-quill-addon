@@ -1,0 +1,22 @@
+{
+  "name": "shia-sunni-app-quill-addon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "script.js",
+  "scripts": {
+    "sync": "cp index.html styles.css script.js sw.js manifest.json version.json custom-content.json data.en.json data.fa.json data.ur.json www/ && cp -r assets/. www/assets/ && npx cap sync android",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}
