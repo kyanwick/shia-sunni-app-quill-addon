@@ -1513,6 +1513,18 @@ window.onload = () => {
                     showSyncStatus('offline', '✗ Supabase RLS blocked save (0 rows written)', 8000);
                     return false;
                   }
+
+                  // Delete any Supabase rows that are no longer in the current content
+                  const currentKeys = rows.map(r => r.key);
+                  const keysParam = currentKeys.map(k => `"${k}"`).join(',');
+                  await fetch(`${SUPABASE_URL}/rest/v1/app_content?key=not.in.(${keysParam})`, {
+                    method: 'DELETE',
+                    headers: {
+                      'apikey': SUPABASE_KEY,
+                      'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                  }).catch(e => console.warn('Cleanup delete failed:', e));
+
                   return true;
                 } else {
                   const err = await resp.text();
@@ -2679,10 +2691,14 @@ window.onload = () => {
                 // Sync deletion to Supabase so it doesn't come back on next launch
                 showSyncStatus('loading', 'جاري الحفظ إلى Supabase...', 0);
                 saveToServer(contentToSave).then(success => {
-                  const now = Date.now().toString();
-                  localStorage.setItem('contentSavedAt', now);
-                  localStorage.setItem('contentSyncedAt', now);
-                  showSyncStatus('online', '✓ تم الحذف في Supabase', 3000);
+                  if (success) {
+                    const now = Date.now().toString();
+                    localStorage.setItem('contentSavedAt', now);
+                    localStorage.setItem('contentSyncedAt', now);
+                    showSyncStatus('online', '✓ تم الحذف في Supabase', 3000);
+                  } else {
+                    showSyncStatus('offline', '⚠ تم الحذف محلياً فقط — فشل Supabase', 5000);
+                  }
                 }).catch(() => {
                   showSyncStatus('offline', '⚠ تم الحذف محلياً فقط — فشل Supabase', 5000);
                 });
