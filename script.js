@@ -2532,9 +2532,6 @@ window.onload = () => {
                       showSyncStatus('loading', 'جاري الحفظ إلى Supabase...', 0);
                       saveToServer(contentToSave).then(success => {
                         if (success) {
-                          const now = Date.now().toString();
-                          localStorage.setItem('contentSavedAt', now);
-                          localStorage.setItem('contentSyncedAt', now);
                           showSyncStatus('online', '✓ تم الحفظ في Supabase', 3000);
                         } else {
                           showSyncStatus('offline', '⚠ تم الحفظ محلياً فقط — فشل Supabase', 5000);
@@ -2692,9 +2689,6 @@ window.onload = () => {
                 showSyncStatus('loading', 'جاري الحفظ إلى Supabase...', 0);
                 saveToServer(contentToSave).then(success => {
                   if (success) {
-                    const now = Date.now().toString();
-                    localStorage.setItem('contentSavedAt', now);
-                    localStorage.setItem('contentSyncedAt', now);
                     showSyncStatus('online', '✓ تم الحذف في Supabase', 3000);
                   } else {
                     showSyncStatus('offline', '⚠ تم الحذف محلياً فقط — فشل Supabase', 5000);
