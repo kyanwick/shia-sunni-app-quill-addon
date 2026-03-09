@@ -1049,22 +1049,6 @@ document.addEventListener("click", e => {
   }
 });
 
-// دعم لمس لفتح الشريط الجانبي
-let touchStartX = null;
-let touchEndX = null;
-document.addEventListener("touchstart", e => {
-  touchStartX = e.changedTouches[0].clientX;
-});
-document.addEventListener("touchend", e => {
-  touchEndX = e.changedTouches[0].clientX;
-  if (touchStartX > window.innerWidth - 50 && touchEndX < touchStartX - 50) {
-    sidebar.classList.add("open");
-    sidebar.setAttribute("aria-hidden", "false");
-    sidebarToggle.setAttribute("aria-expanded", "true");
-    hideSearch();
-    sidebar.focus();
-  }
-});
 
 // إغلاق بـ Escape
 document.addEventListener("keydown", e => {
@@ -1321,6 +1305,7 @@ window.onload = () => {
             container.style.display = "block";
             sidebarToggle.classList.remove("hidden");
             searchToggle.classList.remove("hidden");
+            document.getElementById('refreshBtn').classList.remove("hidden");
             searchInput.classList.add("hidden");
 
             // Decide initial language: URL (?lang= / #lang=) > saved > browser default > 'ar'

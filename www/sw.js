@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shia-sunni-app-v11';
+const CACHE_NAME = 'shia-sunni-app-v13';
 const CONTENT_CACHE = 'shia-sunni-content-v3';
 const RUNTIME_CACHE = 'shia-sunni-runtime-v3';
 

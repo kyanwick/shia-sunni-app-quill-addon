@@ -49,6 +49,7 @@ html, body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   direction: rtl;
   overflow-x: hidden;
+  overscroll-behavior-y: none;
   background-color: #f0f0f5;
   color: #333;
   font-size: 18px;
@@ -216,6 +217,12 @@ b39c6ff39048059c457bf6141ae8bf0f
   left: 50%;
   transform: translateX(-50%);
   color: #3949ab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
 }
 
 #searchToggle {
@@ -596,6 +603,12 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   color: #3949ab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
 }
 
 #searchToggle {
@@ -985,6 +998,12 @@ html, body {
   left: 50%;
   transform: translateX(-50%);
   color: #3949ab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  width: 36px;
+  height: 36px;
 }
 
 #searchToggle {
