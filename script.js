@@ -1049,22 +1049,6 @@ document.addEventListener("click", e => {
   }
 });
 
-// دعم لمس لفتح الشريط الجانبي
-let touchStartX = null;
-let touchEndX = null;
-document.addEventListener("touchstart", e => {
-  touchStartX = e.changedTouches[0].clientX;
-});
-document.addEventListener("touchend", e => {
-  touchEndX = e.changedTouches[0].clientX;
-  if (touchStartX > window.innerWidth - 50 && touchEndX < touchStartX - 50) {
-    sidebar.classList.add("open");
-    sidebar.setAttribute("aria-hidden", "false");
-    sidebarToggle.setAttribute("aria-expanded", "true");
-    hideSearch();
-    sidebar.focus();
-  }
-});
 
 // إغلاق بـ Escape
 document.addEventListener("keydown", e => {
@@ -1274,68 +1258,16 @@ searchInput.addEventListener("keydown", e => {
   if (e.key === "Enter") hideSearch();
 });
 
-// ===== Pull to Refresh =====
-(function() {
-  const indicator = document.getElementById('pullRefreshIndicator');
-  const THRESHOLD = 90; // px to pull before triggering
-  let startY = 0;
-  let pulling = false;
-  let triggered = false;
-
-  document.addEventListener('touchstart', e => {
-    if (window.scrollY === 0) {
-      startY = e.touches[0].clientY;
-      pulling = true;
-      triggered = false;
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchmove', e => {
-    if (!pulling) return;
-    const dy = e.touches[0].clientY - startY;
-    if (dy <= 0) { pulling = false; return; }
-
-    const progress = Math.min(dy / THRESHOLD, 1);
-    const translateY = -80 + progress * 96; // -80px to +16px
-    indicator.style.transition = 'none';
-    indicator.style.transform = `translateX(-50%) translateY(${translateY}px)`;
-    indicator.style.opacity = String(progress);
-    indicator.classList.add('ptr-visible');
-    indicator.classList.remove('ptr-triggered', 'ptr-spinning');
-
-    // Rotate arrow to show pull progress
-    indicator.querySelector('svg').style.transform = `rotate(${progress * 180}deg)`;
-
-    if (progress >= 1 && !triggered) {
-      triggered = true;
-      indicator.classList.add('ptr-triggered', 'ptr-spinning');
-      indicator.querySelector('svg').innerHTML = '<polyline points="12 2 12 12"></polyline><polyline points="8 8 12 12 16 8"></polyline><circle cx="12" cy="12" r="10"></circle>';
-    }
-  }, { passive: true });
-
-  document.addEventListener('touchend', () => {
-    if (!pulling) return;
-    pulling = false;
-
-    if (triggered) {
-      // Show spinner briefly then reload
-      indicator.style.transition = '';
-      indicator.style.transform = 'translateX(-50%) translateY(16px)';
-      setTimeout(() => window.location.reload(true), 400);
-    } else {
-      // Snap back
-      indicator.style.transition = '';
-      indicator.style.transform = 'translateX(-50%) translateY(-80px)';
-      indicator.style.opacity = '0';
-      indicator.classList.remove('ptr-visible', 'ptr-triggered', 'ptr-spinning');
-    }
-  }, { passive: true });
-})();
+// ===== Refresh Button =====
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  window.location.reload(true);
+});
 
 // تهيئة عند تحميل الصفحة
 window.onload = () => {
   sidebarToggle.classList.add("hidden");
   searchToggle.classList.add("hidden");
+  document.getElementById('refreshBtn').classList.add("hidden");
   searchInput.classList.add("hidden");
 
   const logo = splash.querySelector("#logo");
@@ -1349,6 +1281,7 @@ window.onload = () => {
       container.style.display = 'block';
       sidebarToggle.classList.remove("hidden");
       searchToggle.classList.remove("hidden");
+      document.getElementById('refreshBtn').classList.remove("hidden");
     }
   }, 10000);
 
@@ -1372,6 +1305,7 @@ window.onload = () => {
             container.style.display = "block";
             sidebarToggle.classList.remove("hidden");
             searchToggle.classList.remove("hidden");
+            document.getElementById('refreshBtn').classList.remove("hidden");
             searchInput.classList.add("hidden");
 
             // Decide initial language: URL (?lang= / #lang=) > saved > browser default > 'ar'
