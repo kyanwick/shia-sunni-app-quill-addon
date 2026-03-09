@@ -1180,13 +1180,26 @@ searchInput.addEventListener("input", () => {
         results.push({ name: subSec, type: "sub", parent: mainSec, originalName: subSec });
       }
       (subSecs[subSec].topics || []).forEach(topic => {
-        if (topic.toLowerCase().includes(query)) {
+        const topicTitle = typeof topic === 'string' ? topic : (topic.title || '');
+        const topicContent = typeof topic === 'object' ? (topic.content || '') : '';
+        const plainContent = topicContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const titleMatch = topicTitle.toLowerCase().includes(query);
+        const contentMatch = plainContent.toLowerCase().includes(query);
+        if (titleMatch || contentMatch) {
+          let snippet = '';
+          if (contentMatch && !titleMatch) {
+            const idx = plainContent.toLowerCase().indexOf(query);
+            const start = Math.max(0, idx - 40);
+            const end = Math.min(plainContent.length, idx + query.length + 40);
+            snippet = (start > 0 ? '…' : '') + plainContent.slice(start, end) + (end < plainContent.length ? '…' : '');
+          }
           results.push({
-            name: topic,
+            name: topicTitle,
+            snippet,
             type: "topic",
             parent: subSec,
             grandParent: mainSec,
-            originalName: topic
+            originalName: topicTitle
           });
         }
       });
@@ -1198,7 +1211,7 @@ searchInput.addEventListener("input", () => {
     searchResults.innerHTML = "";
     results.forEach(item => {
       const div = document.createElement("div");
-      div.innerHTML = highlight(item.name, query);
+      div.innerHTML = highlight(item.name, query) + (item.snippet ? `<div style="font-size:0.8em;opacity:0.7;margin-top:2px">${highlight(item.snippet, query)}</div>` : '');
       div.tabIndex = 0;
       div.setAttribute("role", "option");
       div.addEventListener("click", () => {
@@ -1260,6 +1273,68 @@ searchInput.addEventListener("input", () => {
 searchInput.addEventListener("keydown", e => {
   if (e.key === "Enter") hideSearch();
 });
+
+// ===== Pull to Refresh =====
+(function() {
+  const indicator = document.getElementById('pullRefreshIndicator');
+  const THRESHOLD = 90; // px to pull before triggering
+  let startY = 0;
+  let pulling = false;
+  let triggered = false;
+
+  const DEAD_ZONE = 15; // px finger must travel down before pull activates
+
+  document.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) {
+      startY = e.touches[0].clientY;
+      pulling = false; // wait for dead zone before activating
+      triggered = false;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (window.scrollY !== 0) return; // page scrolled away from top mid-gesture
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) { pulling = false; return; }
+    if (dy < DEAD_ZONE) return; // inside dead zone — ignore
+    if (!pulling) pulling = true; // crossed dead zone, now track
+
+    const progress = Math.min(dy / THRESHOLD, 1);
+    const translateY = -80 + progress * 96; // -80px to +16px
+    indicator.style.transition = 'none';
+    indicator.style.transform = `translateX(-50%) translateY(${translateY}px)`;
+    indicator.style.opacity = String(progress);
+    indicator.classList.add('ptr-visible');
+    indicator.classList.remove('ptr-triggered', 'ptr-spinning');
+
+    // Rotate arrow to show pull progress
+    indicator.querySelector('svg').style.transform = `rotate(${progress * 180}deg)`;
+
+    if (progress >= 1 && !triggered) {
+      triggered = true;
+      indicator.classList.add('ptr-triggered', 'ptr-spinning');
+      indicator.querySelector('svg').innerHTML = '<polyline points="12 2 12 12"></polyline><polyline points="8 8 12 12 16 8"></polyline><circle cx="12" cy="12" r="10"></circle>';
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+
+    if (triggered) {
+      // Show spinner briefly then reload
+      indicator.style.transition = '';
+      indicator.style.transform = 'translateX(-50%) translateY(16px)';
+      setTimeout(() => window.location.reload(true), 400);
+    } else {
+      // Snap back
+      indicator.style.transition = '';
+      indicator.style.transform = 'translateX(-50%) translateY(-80px)';
+      indicator.style.opacity = '0';
+      indicator.classList.remove('ptr-visible', 'ptr-triggered', 'ptr-spinning');
+    }
+  }, { passive: true });
+})();
 
 // تهيئة عند تحميل الصفحة
 window.onload = () => {
@@ -1447,40 +1522,13 @@ window.onload = () => {
              */
             async function saveToServer(content) {
               try {
-                const rows = [];
-                const timestamp = new Date().toISOString();
+                // Store entire content as a single row — no orphan rows on delete
+                const row = [{
+                  key: 'full_content',
+                  content: { sections: content.sections || {} },
+                  updated_at: new Date().toISOString()
+                }];
 
-                if (content.sections) {
-                  for (const sectionName in content.sections) {
-                    const section = content.sections[sectionName];
-                    rows.push({
-                      key: `section_${sectionName}`,
-                      content: {
-                        name: sectionName,
-                        subSections: section.subSections ? Object.keys(section.subSections) : [],
-                        topics: section.topics || []
-                      },
-                      updated_at: timestamp
-                    });
-                    if (section.subSections) {
-                      for (const subName in section.subSections) {
-                        rows.push({
-                          key: `${sectionName}__${subName}`,
-                          content: {
-                            section: sectionName,
-                            subsection: subName,
-                            topics: section.subSections[subName].topics || []
-                          },
-                          updated_at: timestamp
-                        });
-                      }
-                    }
-                  }
-                }
-
-                if (rows.length === 0) return false;
-
-                // Single upsert call for all rows
                 const resp = await fetch(`${SUPABASE_URL}/rest/v1/app_content?on_conflict=key`, {
                   method: 'POST',
                   headers: {
@@ -1489,15 +1537,15 @@ window.onload = () => {
                     'Content-Type': 'application/json',
                     'Prefer': 'resolution=merge-duplicates,return=representation'
                   },
-                  body: JSON.stringify(rows)
+                  body: JSON.stringify(row)
                 });
 
                 if (resp.ok) {
                   const saved = await resp.json().catch(() => []);
-                  console.log(`✓ Supabase returned ${saved.length} rows:`, saved);
+                  console.log(`✓ Supabase saved full_content row:`, saved);
                   if (saved.length === 0) {
-                    console.error('✗ Supabase accepted request but saved 0 rows — likely RLS blocking UPDATE');
-                    showSyncStatus('offline', '✗ Supabase RLS blocked save (0 rows written)', 8000);
+                    console.error('✗ Supabase RLS blocked save (0 rows written)');
+                    showSyncStatus('offline', '✗ Supabase RLS blocked save', 8000);
                     return false;
                   }
                   return true;
@@ -1535,52 +1583,28 @@ window.onload = () => {
                 if (response.ok) {
                   const rows = await response.json();
 
-                  if (rows && rows.length > 0) {
-                    // Reconstruct content from multiple rows
-                    const reconstructed = { sections: {} };
+                  // Look for the single full_content row saved by saveToServer
+                  const fullRow = rows && rows.find(r => r.key === 'full_content');
 
-                    // First pass: collect section structures
-                    for (const row of rows) {
-                      if (row.key && row.key.startsWith('section_')) {
-                        const sectionName = row.key.replace('section_', '');
-                        reconstructed.sections[sectionName] = {
-                          subSections: {},
-                          topics: row.content.topics || []
-                        };
-                      }
-                    }
-
-                    // Second pass: fill in subsections
-                    for (const row of rows) {
-                      if (row.key && row.key.includes('__')) {
-                        const [sectionName, subName] = row.key.split('__');
-                        if (reconstructed.sections[sectionName]) {
-                          reconstructed.sections[sectionName].subSections[subName] = {
-                            topics: row.content.topics || []
-                          };
-                        }
-                      }
-                    }
-
-                    // Only overwrite local content if Supabase is newer than last local save
+                  if (fullRow && fullRow.content && fullRow.content.sections) {
                     const localSavedAt = parseInt(localStorage.getItem('contentSavedAt') || '0');
                     const supabaseSavedAt = parseInt(localStorage.getItem('contentSyncedAt') || '0');
                     if (supabaseSavedAt >= localSavedAt) {
+                      const reconstructed = { sections: fullRow.content.sections };
                       ContentStore.set(JSON.stringify(reconstructed));
                       if (data.ar) data.ar.sections = reconstructed.sections;
                       localStorage.setItem('contentSyncedAt', Date.now().toString());
+                      console.log('✓ Synced full_content from Supabase');
+                      showSyncStatus('online', '✓ تم تحديث المحتوى', 3000);
+                      const lang = languageSelect?.value || 'ar';
+                      translatePage(lang);
+                      if (typeof openMainSections === 'function') openMainSections();
                     } else {
-                      console.log('Local content is newer than Supabase — keeping local data');
+                      console.log('Local content is newer — keeping local data');
+                      showSyncStatus('online', '✓ متصل', 3000);
                     }
-                    console.log(`✓ Synced ${rows.length} content chunks from Supabase`);
-                    showSyncStatus('online', '✓ تم تحديث المحتوى', 3000);
-
-                    // Refresh UI
-                    const lang = languageSelect?.value || 'ar';
-                    translatePage(lang);
-                    if (typeof openMainSections === 'function') openMainSections();
                   } else {
-                    console.log('Supabase is empty, keeping local content');
+                    console.log('No full_content row in Supabase, keeping local content');
                     showSyncStatus('online', '✓ متصل — لا يوجد محتوى جديد', 3000);
                   }
                 } else {
@@ -2507,9 +2531,6 @@ window.onload = () => {
                       showSyncStatus('loading', 'جاري الحفظ إلى Supabase...', 0);
                       saveToServer(contentToSave).then(success => {
                         if (success) {
-                          const now = Date.now().toString();
-                          localStorage.setItem('contentSavedAt', now);
-                          localStorage.setItem('contentSyncedAt', now);
                           showSyncStatus('online', '✓ تم الحفظ في Supabase', 3000);
                         } else {
                           showSyncStatus('offline', '⚠ تم الحفظ محلياً فقط — فشل Supabase', 5000);
@@ -2658,9 +2679,22 @@ window.onload = () => {
                   messages: data.ar.messages
                 };
                 ContentStore.set(JSON.stringify(contentToSave));
-                
+                localStorage.setItem('contentSavedAt', Date.now().toString());
+
                 // Update in-memory Arabic data
                 data.ar.sections = content.sections;
+
+                // Sync deletion to Supabase so it doesn't come back on next launch
+                showSyncStatus('loading', 'جاري الحفظ إلى Supabase...', 0);
+                saveToServer(contentToSave).then(success => {
+                  if (success) {
+                    showSyncStatus('online', '✓ تم الحذف في Supabase', 3000);
+                  } else {
+                    showSyncStatus('offline', '⚠ تم الحذف محلياً فقط — فشل Supabase', 5000);
+                  }
+                }).catch(() => {
+                  showSyncStatus('offline', '⚠ تم الحذف محلياً فقط — فشل Supabase', 5000);
+                });
                 
                 // Refresh UI
                 translatePage(lang);

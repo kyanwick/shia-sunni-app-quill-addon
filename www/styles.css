@@ -1,3 +1,46 @@
+/* ===== Pull to Refresh ===== */
+#pullRefreshIndicator {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(-80px);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(30, 42, 120, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+  transition: transform 0.25s ease, opacity 0.25s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+#pullRefreshIndicator.ptr-visible {
+  opacity: 1;
+}
+#pullRefreshIndicator.ptr-triggered {
+  transform: translateX(-50%) translateY(16px);
+  background: rgba(22, 120, 60, 0.93);
+}
+#pullRefreshIndicator svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: #fff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.25s ease;
+}
+#pullRefreshIndicator.ptr-spinning svg {
+  animation: ptr-spin 0.7s linear infinite;
+}
+@keyframes ptr-spin {
+  to { transform: rotate(360deg); }
+}
+
 /* ===== Sync Status Indicator ===== */
 .sync-status {
   position: fixed;
